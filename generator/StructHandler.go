@@ -1,13 +1,21 @@
+// Copyright 2016 HenryLee. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package generator
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"os/exec"
-	"path"
-	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/henrylee2cn/thinkgo"
@@ -64,18 +72,19 @@ List of supported param value types:
 type (
 	// StructHandler struct handler
 	StructHandler struct {
-		Dir         string  // file path or package name
-		UrlPath     string  // URL's path
-		Name        string  // (required) struct name
-		Fields      []Field // fields
-		Note        string  // note for API
-		Return      string  // response content demo
-		Method      thinkgo.Methodset
-		fileParams  []string
-		filesParams []string
-		importmap   map[string]bool
-		sign        string
-		isMainPkg   bool
+		Dir          string  // file path or package name
+		UrlPath      string  // URL's path
+		Name         string  // (required) struct name
+		Fields       []Field // fields
+		ServeContent string  // main logic
+		Note         string  // note for API
+		Return       string  // response content demo
+		Method       thinkgo.Methodset
+		fileParams   []string
+		filesParams  []string
+		importmap    map[string]bool
+		sign         string
+		isMainPkg    bool
 	}
 	// Field struct handler's field
 	Field struct {
@@ -97,26 +106,13 @@ type (
 	}
 )
 
-// CreateFile creates struct handler file.
-func (s *StructHandler) CreateFile() error {
-	err := os.MkdirAll(s.Dir, 0777)
-	if err != nil {
-		return err
-	}
-	filename := path.Join(s.Dir, thinkgo.SnakeString(s.Name)) + ".go"
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
+// Output creates struct handler file.
+func (s *StructHandler) Output() error {
 	code, err := s.Create()
 	if err != nil {
 		return err
 	}
-	_, err = f.WriteString(code)
-	f.Close()
-	cmd := exec.Command("gofmt", "-w", filename)
-	err = cmd.Run()
-	return err
+	return writeFile(s.Dir, thinkgo.SnakeString(s.Name)+".go", code)
 }
 
 // Create returns struct handler's codes
@@ -126,28 +122,24 @@ func (s *StructHandler) Create() (code string, err error) {
 	if err != nil {
 		return
 	}
-
 	// build codes
-
-	code += s.createStruct()
-
-	var imports []string
-	for pkg := range s.importmap {
-		imports = append(imports, pkg)
-	}
-	sort.Strings(imports)
-	if len(imports) > 0 {
-		var pkgs = fmt.Sprintf("\nimport (\n")
-		for _, pkg := range imports {
-			pkgs += fmt.Sprintf("\n    %q", pkg)
-		}
-		pkgs += fmt.Sprintf("\n)\n")
-		code = pkgs + code
-	}
-
-	code = fmt.Sprintf("package %s\n%s", s.PkgName(), code)
-
+	code = fmt.Sprintf("package %s\n%s\n%s", s.PkgName(), importCode(s.importmap), s.createStruct())
 	return code, nil
+}
+
+// GetUrlPath returns router node's url path.
+func (s *StructHandler) GetUrlPath() string {
+	return s.UrlPath
+}
+
+// GetMethod returns request method.
+func (s *StructHandler) GetMethod() thinkgo.Methodset {
+	return s.Method
+}
+
+// GetName returns handler type name.
+func (s *StructHandler) GetName() string {
+	return s.Name
 }
 
 // RouterName returns router node's name
@@ -196,38 +188,28 @@ func (s *StructHandler) PkgPrefix() string {
 
 // initialize
 func (s *StructHandler) init() error {
-	if len(s.Method.Methods()) == 0 {
-		return errors.New("The Method field must be setted correctly.")
+	// if len(s.Method.Methods()) == 0 {
+	// 	return errors.New("The Method field must be setted correctly.")
+	// }
+	err := cleanDir(&s.Dir)
+	if err != nil {
+		return err
 	}
-	if !filepath.IsAbs(s.Dir) {
-		var err error
-		s.Dir, err = filepath.Abs(s.Dir)
-		if err != nil {
-			return err
-		}
-		s.Dir = strings.Replace(s.Dir, `\`, `/`, -1)
+	err = cleanUrlPath(&s.UrlPath)
+	if err != nil {
+		return err
 	}
-	s.UrlPath = strings.TrimSpace(s.UrlPath)
-	s.UrlPath = strings.Trim(s.UrlPath, "/")
-	if s.UrlPath == "" {
-		return errors.New("The UrlPath field must be setted.")
+	s.sign, err = cleanName(&s.Name)
+	if err != nil {
+		return err
 	}
 	s.Note = strings.TrimSpace(s.Note)
-	s.Name = strings.TrimSpace(s.Name)
-	s.Name = thinkgo.CamelString(s.Name)
-	if s.Name == "" {
-		return errors.New("The Handler type name is incorrect.")
-	}
-	signRune := []rune(s.Name)[0]
-	if signRune < 'A' || signRune > 'Z' {
-		return errors.New("The Handler type name is incorrect.")
-	}
-	s.sign = strings.ToLower(string(signRune))
 	if len(s.importmap) == 0 {
 		s.importmap = map[string]bool{
 			"github.com/henrylee2cn/thinkgo": true,
 		}
 	}
+
 	var fields = make([]Field, 0, len(s.Fields))
 	s.fileParams, s.filesParams = []string{}, []string{}
 	for _, field := range s.Fields {
@@ -313,35 +295,39 @@ func (s *StructHandler) createStruct() string {
 	// build methods
 	var serve string
 	serve += fmt.Sprintf("\n// Serve impletes Handler.\nfunc (%s *%s) Serve(ctx *thinkgo.Context) error {", s.sign, s.Name)
-	for i, filename := range s.fileParams {
-		var equal = "="
-		if i == 0 {
-			equal = ":" + equal
+	if s.ServeContent != "" {
+		serve += fmt.Sprintf("\n%s", s.ServeContent)
+	} else {
+		for i, filename := range s.fileParams {
+			var equal = "="
+			if i == 0 {
+				equal = ":" + equal
+			}
+			serve += fmt.Sprintf("\n    info, err %s ctx.SaveFile(%q, false)", equal, thinkgo.SnakeString(filename))
+			serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, thinkgo.Map{\"error\": err.Error()}, true)\n    }")
+			serve += fmt.Sprintf("\n    %s.%sUrl = info.Url", s.sign, filename)
 		}
-		serve += fmt.Sprintf("\n    info, err %s ctx.SaveFile(\"%s\", false)", equal, thinkgo.SnakeString(filename))
-		serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, thinkgo.Map{\"error\": err.Error()}, true)\n    }")
-		serve += fmt.Sprintf("\n    %s.%sUrl = info.Url", s.sign, filename)
-	}
-	for i, filename := range s.filesParams {
-		var equal = "="
-		if i == 0 {
-			equal = ":" + equal
+		for i, filename := range s.filesParams {
+			var equal = "="
+			if i == 0 {
+				equal = ":" + equal
+			}
+			serve += fmt.Sprintf("\n    infos, err %s ctx.SaveFiles(%q, false)", equal, thinkgo.SnakeString(filename))
+			serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, thinkgo.Map{\"error\": err.Error()}, true)\n    }")
+			serve += fmt.Sprintf("\n    for _, info := range infos {")
+			serve += fmt.Sprintf("\n        %s.%sUrls = append(%s.%sUrls, info.Url)", s.sign, filename, s.sign, filename)
+			serve += fmt.Sprintf("\n    }")
 		}
-		serve += fmt.Sprintf("\n    infos, err %s ctx.SaveFiles(\"%s\", false)", equal, thinkgo.SnakeString(filename))
-		serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, thinkgo.Map{\"error\": err.Error()}, true)\n    }")
-		serve += fmt.Sprintf("\n    for _, info := range infos {")
-		serve += fmt.Sprintf("\n        %s.%sUrls = append(%s.%sUrls, info.Url)", s.sign, filename, s.sign, filename)
-		serve += fmt.Sprintf("\n    }")
+		serve += fmt.Sprintf("\n    return ctx.JSON(200, %s, true)", s.sign)
 	}
-	serve += fmt.Sprintf("\n    return ctx.JSON(200, %s, true)", s.sign)
 	serve += fmt.Sprintf("\n}\n")
 
 	var doc string
 	if s.Note != "" || s.Return != "" {
 		doc += fmt.Sprintf("\n// Doc returns the API's note, result or parameters information.\nfunc (%s *%s) Doc() thinkgo.Doc {", s.sign, s.Name)
 		doc += fmt.Sprintf("\n    return thinkgo.Doc{")
-		doc += fmt.Sprintf("\n        Note: \"%s\",", s.Note)
-		doc += fmt.Sprintf("\n        Return: \"%s\",", s.Return)
+		doc += fmt.Sprintf("\n        Note: %q,", s.Note)
+		doc += fmt.Sprintf("\n        Return: %q,", s.Return)
 		doc += fmt.Sprintf("\n    }")
 		doc += fmt.Sprintf("\n}")
 	}

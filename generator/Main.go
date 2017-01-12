@@ -1,14 +1,22 @@
+// Copyright 2016 HenryLee. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package generator
 
 import (
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
-	"path"
-	"path/filepath"
-	"sort"
-	"strings"
 )
 
 type (
@@ -29,13 +37,9 @@ type (
 
 // NewMain creates a *Main
 func NewMain(dir string) (*Main, error) {
-	if !filepath.IsAbs(dir) {
-		var err error
-		dir, err = filepath.Abs(dir)
-		if err != nil {
-			return nil, err
-		}
-		dir = strings.Replace(dir, `\`, `/`, -1)
+	err := cleanDir(&dir)
+	if err != nil {
+		return nil, err
 	}
 	m := &Main{
 		dir: dir,
@@ -78,27 +82,14 @@ func (m *Main) AddFrame(router *Router, frame string, version ...string) error {
 	return nil
 }
 
-// CreateFile returns main's file.
-func (m *Main) CreateFile() error {
-	err := os.MkdirAll(m.dir, 0777)
-	if err != nil {
-		return err
-	}
-	filename := path.Join(m.dir, "main.go")
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	code := m.Create()
-	_, err = f.WriteString(code)
-	f.Close()
-	cmd := exec.Command("gofmt", "-w", filename)
-	err = cmd.Run()
+// Output returns main's file.
+func (m *Main) Output() error {
+	err := writeFile(m.dir, "main.go", m.Create())
 	if err != nil {
 		return err
 	}
 	for _, frame := range m.frames {
-		err = frame.router.CreateFile()
+		err = frame.router.Output()
 		if err != nil {
 			return err
 		}
@@ -121,21 +112,5 @@ func (m *Main) Create() string {
 	code += fmt.Sprintf("\n    thinkgo.Run()")
 	code += fmt.Sprintf("\n}\n")
 
-	var imports []string
-	for pkg := range m.importmap {
-		imports = append(imports, pkg)
-	}
-	sort.Strings(imports)
-	if len(imports) > 0 {
-		var pkgs = fmt.Sprintf("\nimport (\n")
-		for _, pkg := range imports {
-			pkgs += fmt.Sprintf("\n    %q", pkg)
-		}
-		pkgs += fmt.Sprintf("\n)\n")
-		code = pkgs + code
-	}
-
-	code = fmt.Sprintf("package main\n%s", code)
-
-	return code
+	return fmt.Sprintf("package main\n%s\n%s", importCode(m.importmap), code)
 }

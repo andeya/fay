@@ -8,7 +8,7 @@ func TestStructHandler(t *testing.T) {
 	var structure = StructHandler{
 		Dir:    "./test/handler",
 		Name:   "Index",
-		Method: "GET",
+		Method: "POST",
 		Fields: []Field{
 			{
 				Type: "string",
@@ -32,5 +32,5 @@ func TestStructHandler(t *testing.T) {
 		Note:   "index handler",
 		Return: "{}",
 	}
-	t.Log(structure.CreateFile())
+	t.Log(structure.Output())
 }

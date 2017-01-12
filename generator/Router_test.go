@@ -8,7 +8,7 @@ func TestRouter(t *testing.T) {
 	var structure = &StructHandler{
 		Dir:     "./test/handler",
 		Name:    "Index",
-		Method:  "GET",
+		Method:  "POST",
 		UrlPath: "/test/index",
 		Fields: []Field{
 			{
@@ -33,12 +33,12 @@ func TestRouter(t *testing.T) {
 		Note:   "index handler",
 		Return: "{}",
 	}
-	structure.CreateFile()
+	structure.Output()
 
 	var router, err = NewRouter("route", "./test/router")
 	if err != nil {
 		t.Logf("%v", err)
 	}
-	router.API(structure)
-	t.Log(router.CreateFile())
+	router.AddHandler(structure)
+	t.Log(router.Output())
 }
