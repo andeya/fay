@@ -33,6 +33,7 @@ func Output(fullfilename string, content string) error {
 	if err != nil {
 		return err
 	}
+	fullfilename = strings.Replace(fullfilename, `\`, `/`, -1)
 	dir, shorname := filepath.Split(fullfilename)
 	return writeFile(dir, shorname, content)
 }
