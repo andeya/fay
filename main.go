@@ -14,6 +14,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -25,9 +26,10 @@ import (
 
 var appname string
 var crupath, _ = os.Getwd()
+var apptpl = "simple"
 
 func main() {
-	thinkgo.Printf("os.Args: %#v", os.Args)
+	thinkgo.RemoveUseless()
 	if len(os.Args) < 2 {
 		help()
 		return
@@ -35,59 +37,47 @@ func main() {
 	switch os.Args[1] {
 	case "new":
 		newapp(os.Args[2:])
+	case "run":
+		runapp(os.Args[2:])
 	}
-}
-func help() {
-
-}
-func newappHelp() {
-
-}
-
-func cleanCrupath() {
-	var err error
-	crupath = strings.TrimSpace(crupath)
-	crupath, err = filepath.Abs(crupath)
-	if err != nil {
-		thinkgo.Fatalf("[think] Create project fail: %s", err)
-	}
-	crupath = strings.Replace(crupath, `\`, `/`, -1)
-	crupath = strings.TrimRight(crupath, "/") + "/"
 }
 
 func newapp(args []string) {
 	switch len(args) {
 	case 1:
-		appname = args[0]
-		crupath = filepath.Join(crupath, appname)
+		initVar(args)
 	case 2:
-		appname = args[0]
-		crupath = args[1]
+		initVar(args)
+		apptpl = args[1]
 	default:
 		newappHelp()
 		return
 	}
-	cleanCrupath()
 	thinkgo.Printf("[think] Create a thinkgo project named `%s` in the `%s` path.", appname, crupath)
 	if isExist(crupath) {
 		thinkgo.Printf("[think] The project path has conflic, do you want to build in: %s\n", crupath)
 		thinkgo.Printf("[think] Do you want to overwrite it? [yes|no]]  ")
 		if !askForConfirmation() {
-			thinkgo.Fatalf("[think] cancel...")
+			thinkgo.Fatalf("[think] Cancel...")
 			return
 		}
 	}
 
-	exit := make(chan bool)
 	thinkgo.Printf("[think] Start create project...")
 
-	model.SimplePro(crupath, appname)
+	switch apptpl {
+	case "simple":
+		model.SimplePro(crupath, appname)
+	default:
+		thinkgo.Fatalf("[think] `%s` template does not exist, reference:\n[simple]\n", apptpl)
+	}
 
 	thinkgo.Printf("[think] Create was successful")
 
 	if err := os.Chdir(crupath); err != nil {
 		thinkgo.Fatalf("[think] Create project fail: %v", err)
 	}
+	exit := make(chan bool)
 	autobuild()
 	newWatcher()
 	for {
@@ -96,4 +86,75 @@ func newapp(args []string) {
 			runtime.Goexit()
 		}
 	}
+}
+
+func runapp(args []string) {
+	switch len(args) {
+	case 0, 1:
+		initVar(args)
+	default:
+		runappHelp()
+		return
+	}
+	if err := os.Chdir(crupath); err != nil {
+		thinkgo.Fatalf("[think] Create project fail: %v", err)
+	}
+	exit := make(chan bool)
+	autobuild()
+	newWatcher()
+	for {
+		select {
+		case <-exit:
+			runtime.Goexit()
+		}
+	}
+}
+
+const helpInfo = `Think Usage:
+        think command [arguments]
+
+The commands are:
+        new        create, compile and run (monitor changes) a new thinkgo project
+        run        compile and run (monitor changes) an any existing go project
+
+think new appname [apptpl]
+        appname    specifies the path of the new thinkgo project
+        apptpl     optionally, specifies the thinkgo project template type
+
+think run [appname]
+        appname    optionally, specifies the path of the new project
+`
+
+func help() {
+	fmt.Println(helpInfo)
+}
+
+func newappHelp() {
+	fmt.Println(helpInfo)
+}
+
+func runappHelp() {
+	fmt.Println(helpInfo)
+}
+
+func initVar(args []string) {
+	var dir string
+	if len(args) > 0 {
+		dir, appname = filepath.Split(args[0])
+		if dir != "" {
+			crupath = filepath.Join(dir, appname)
+		} else {
+			crupath = filepath.Join(crupath, appname)
+		}
+	} else {
+		_, appname = filepath.Split(crupath)
+	}
+	var err error
+	crupath = strings.TrimSpace(crupath)
+	crupath, err = filepath.Abs(crupath)
+	if err != nil {
+		thinkgo.Fatalf("[think] Create project fail: %s", err)
+	}
+	crupath = strings.Replace(crupath, `\`, `/`, -1)
+	crupath = strings.TrimRight(crupath, "/") + "/"
 }

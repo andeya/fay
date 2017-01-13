@@ -27,6 +27,38 @@ import (
 	"github.com/henrylee2cn/thinkgo"
 )
 
+// Output returns file.
+func Output(fullfilename string, content string) error {
+	fullfilename, err := filepath.Abs(fullfilename)
+	if err != nil {
+		return err
+	}
+	dir, shorname := filepath.Split(fullfilename)
+	return writeFile(dir, shorname, content)
+}
+
+func writeFile(dir, shortname, code string) error {
+	err := os.MkdirAll(dir, 0777)
+	if err != nil {
+		return err
+	}
+	filename := path.Join(dir, shortname)
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(code)
+	f.Close()
+	thinkgo.Printf("[think] Created %s", filename)
+	if filepath.Ext(shortname) == ".go" {
+		cmd := exec.Command("gofmt", "-w", filename)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		return cmd.Run()
+	}
+	return nil
+}
+
 func cleanDir(dir *string) error {
 	if !filepath.IsAbs(*dir) {
 		var err error
@@ -77,21 +109,4 @@ func importCode(importmap map[string]bool) string {
 		pkgs += fmt.Sprintf("\n)\n")
 	}
 	return pkgs
-}
-
-func writeFile(dir, shortname, code string) error {
-	err := os.MkdirAll(dir, 0777)
-	if err != nil {
-		return err
-	}
-	filename := path.Join(dir, shortname)
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	_, err = f.WriteString(code)
-	f.Close()
-	thinkgo.Printf("[think] Created %s", filename)
-	cmd := exec.Command("gofmt", "-w", filename)
-	return cmd.Run()
 }

@@ -165,7 +165,7 @@ func (s *StructHandler) PkgPath() string {
 	}
 	dirs := strings.Split(s.Dir, "/src/")
 	if len(dirs) < 2 {
-		return ""
+		thinkgo.Fatalf("You must generate codes in the `src` or its offspring directory!")
 	}
 	return strings.Join(dirs[1:], "/src/")
 }
