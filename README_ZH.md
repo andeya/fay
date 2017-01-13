@@ -18,7 +18,7 @@ go get -u -v github.com/henrylee2cn/think
 
 ## 用法
 
-```sh
+```
         think command [arguments]
 
 The commands are:

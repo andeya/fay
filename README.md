@@ -20,7 +20,7 @@ go get -u -v github.com/henrylee2cn/think
 
 ## Usage
 
-```sh
+```
         think command [arguments]
 
 The commands are:
