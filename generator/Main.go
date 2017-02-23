@@ -26,7 +26,7 @@ type (
 		importmap map[string]bool
 		frames    []*Frame
 	}
-	// Frame thinkgo app
+	// Frame faygo app
 	Frame struct {
 		pkgPrefix string
 		name      string
@@ -44,13 +44,13 @@ func NewMain(dir string) (*Main, error) {
 	m := &Main{
 		dir: dir,
 		importmap: map[string]bool{
-			"github.com/henrylee2cn/thinkgo": true,
+			"github.com/henrylee2cn/faygo": true,
 		},
 	}
 	return m, nil
 }
 
-// AddFrame adds thinkgo app.
+// AddFrame adds faygo app.
 func (m *Main) AddFrame(router *Router, frame string, version ...string) error {
 	if frame == "" {
 		return errors.New("The frame param must be setted.")
@@ -107,9 +107,9 @@ func (m *Main) Create() string {
 		if frame.version != "" {
 			version = fmt.Sprintf(", %q", frame.version)
 		}
-		code += fmt.Sprintf("\n    %s%s(thinkgo.New(%q%s))", frame.pkgPrefix, frame.router.funcname, frame.name, version)
+		code += fmt.Sprintf("\n    %s%s(faygo.New(%q%s))", frame.pkgPrefix, frame.router.funcname, frame.name, version)
 	}
-	code += fmt.Sprintf("\n    thinkgo.Run()")
+	code += fmt.Sprintf("\n    faygo.Run()")
 	code += fmt.Sprintf("\n}\n")
 
 	return fmt.Sprintf("package main\n%s\n%s", importCode(m.importmap), code)

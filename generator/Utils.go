@@ -24,7 +24,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/henrylee2cn/thinkgo"
+	"github.com/henrylee2cn/faygo"
 )
 
 // Output returns file.
@@ -50,7 +50,7 @@ func writeFile(dir, shortname, code string) error {
 	}
 	_, err = f.WriteString(code)
 	f.Close()
-	thinkgo.Printf("[think] Created %s", filename)
+	faygo.Printf("[fay] Created %s", filename)
 	if filepath.Ext(shortname) == ".go" {
 		cmd := exec.Command("gofmt", "-w", filename)
 		cmd.Stderr = os.Stderr
@@ -81,7 +81,7 @@ func cleanUrlPath(urlPath *string) error {
 func cleanName(name *string) (firstChar string, err error) {
 	_name := *name
 	*name = strings.TrimSpace(*name)
-	*name = thinkgo.CamelString(*name)
+	*name = faygo.CamelString(*name)
 	if *name == "" {
 		err = errors.New("The type (or func) name \"" + _name + "\" is incorrect.")
 		return

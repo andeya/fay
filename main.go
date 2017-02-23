@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Command think is a deployment tools of thinkgo web frameware.
+// Command fay is a deployment tools of faygo web frameware.
 //  Features:
-//  - Create, compile and run (monitor changes) a new thinkgo project
+//  - Create, compile and run (monitor changes) a new faygo project
 //  - Compile and run (monitor changes) an any existing go project
-//  - Provides a meta-programming toolkit for thinkgo
+//  - Provides a meta-programming toolkit for faygo
 //
 //  Usage:
-//          think command [arguments]
+//          fay command [arguments]
 //
 //  The commands are:
-//          new        create, compile and run (monitor changes) a new thinkgo project
+//          new        create, compile and run (monitor changes) a new faygo project
 //          run        compile and run (monitor changes) an any existing go project
 //
-//  think new appname [apptpl]
-//          appname    specifies the path of the new thinkgo project
-//          apptpl     optionally, specifies the thinkgo project template type
+//  fay new appname [apptpl]
+//          appname    specifies the path of the new faygo project
+//          apptpl     optionally, specifies the faygo project template type
 //
-//  think run [appname]
+//  fay run [appname]
 //          appname    optionally, specifies the path of the new project
 package main
 
@@ -40,8 +40,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/henrylee2cn/think/model"
-	"github.com/henrylee2cn/thinkgo"
+	"github.com/henrylee2cn/fay/model"
+	"github.com/henrylee2cn/faygo"
 )
 
 var appname string
@@ -49,7 +49,7 @@ var crupath, _ = os.Getwd()
 var apptpl = "simple"
 
 func main() {
-	thinkgo.RemoveUseless()
+	faygo.RemoveUseless()
 	if len(os.Args) < 2 {
 		help()
 		return
@@ -73,29 +73,29 @@ func newapp(args []string) {
 		newappHelp()
 		return
 	}
-	thinkgo.Printf("[think] Create a thinkgo project named `%s` in the `%s` path.", appname, crupath)
+	faygo.Printf("[fay] Create a faygo project named `%s` in the `%s` path.", appname, crupath)
 	if isExist(crupath) {
-		thinkgo.Printf("[think] The project path has conflic, do you want to build in: %s\n", crupath)
-		thinkgo.Printf("[think] Do you want to overwrite it? [yes|no]]  ")
+		faygo.Printf("[fay] The project path has conflic, do you want to build in: %s\n", crupath)
+		faygo.Printf("[fay] Do you want to overwrite it? [yes|no]]  ")
 		if !askForConfirmation() {
-			thinkgo.Fatalf("[think] Cancel...")
+			faygo.Fatalf("[fay] Cancel...")
 			return
 		}
 	}
 
-	thinkgo.Printf("[think] Start create project...")
+	faygo.Printf("[fay] Start create project...")
 
 	switch apptpl {
 	case "simple":
 		model.SimplePro(crupath, appname)
 	default:
-		thinkgo.Fatalf("[think] `%s` template does not exist, reference:\n[simple]\n", apptpl)
+		faygo.Fatalf("[fay] `%s` template does not exist, reference:\n[simple]\n", apptpl)
 	}
 
-	thinkgo.Printf("[think] Create was successful")
+	faygo.Printf("[fay] Create was successful")
 
 	if err := os.Chdir(crupath); err != nil {
-		thinkgo.Fatalf("[think] Create project fail: %v", err)
+		faygo.Fatalf("[fay] Create project fail: %v", err)
 	}
 	exit := make(chan bool)
 	autobuild()
@@ -117,7 +117,7 @@ func runapp(args []string) {
 		return
 	}
 	if err := os.Chdir(crupath); err != nil {
-		thinkgo.Fatalf("[think] Create project fail: %v", err)
+		faygo.Fatalf("[fay] Create project fail: %v", err)
 	}
 	exit := make(chan bool)
 	autobuild()
@@ -130,18 +130,18 @@ func runapp(args []string) {
 	}
 }
 
-const helpInfo = `Think Usage:
-        think command [arguments]
+const helpInfo = `Fay Usage:
+        fay command [arguments]
 
 The commands are:
-        new        create, compile and run (monitor changes) a new thinkgo project
+        new        create, compile and run (monitor changes) a new faygo project
         run        compile and run (monitor changes) an any existing go project
 
-think new appname [apptpl]
-        appname    specifies the path of the new thinkgo project
-        apptpl     optionally, specifies the thinkgo project template type
+fay new appname [apptpl]
+        appname    specifies the path of the new faygo project
+        apptpl     optionally, specifies the faygo project template type
 
-think run [appname]
+fay run [appname]
         appname    optionally, specifies the path of the new project
 `
 
@@ -173,7 +173,7 @@ func initVar(args []string) {
 	crupath = strings.TrimSpace(crupath)
 	crupath, err = filepath.Abs(crupath)
 	if err != nil {
-		thinkgo.Fatalf("[think] Create project fail: %s", err)
+		faygo.Fatalf("[fay] Create project fail: %s", err)
 	}
 	crupath = strings.Replace(crupath, `\`, `/`, -1)
 	crupath = strings.TrimRight(crupath, "/") + "/"

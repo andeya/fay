@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/henrylee2cn/thinkgo"
+	"github.com/henrylee2cn/faygo"
 )
 
 /*Param tag value description:
@@ -79,7 +79,7 @@ type (
 		ServeContent string  // main logic
 		Note         string  // note for API
 		Return       string  // response content demo
-		Method       thinkgo.Methodset
+		Method       faygo.Methodset
 		fileParams   []string
 		filesParams  []string
 		importmap    map[string]bool
@@ -112,7 +112,7 @@ func (s *StructHandler) Output() error {
 	if err != nil {
 		return err
 	}
-	return writeFile(s.Dir, thinkgo.SnakeString(s.Name)+".go", code)
+	return writeFile(s.Dir, faygo.SnakeString(s.Name)+".go", code)
 }
 
 // Create returns struct handler's codes
@@ -133,7 +133,7 @@ func (s *StructHandler) GetUrlPath() string {
 }
 
 // GetMethod returns request method.
-func (s *StructHandler) GetMethod() thinkgo.Methodset {
+func (s *StructHandler) GetMethod() faygo.Methodset {
 	return s.Method
 }
 
@@ -158,14 +158,14 @@ func (s *StructHandler) TryMainPkg(mainPkgPath string) {
 	s.isMainPkg = true
 }
 
-// PkgPath returns the package path, e.g `github.com/henrylee2cn/think/test`
+// PkgPath returns the package path, e.g `github.com/henrylee2cn/fay/test`
 func (s *StructHandler) PkgPath() string {
 	if s.isMainPkg || s.Dir == "" {
 		return ""
 	}
 	dirs := strings.Split(s.Dir, "/src/")
 	if len(dirs) < 2 {
-		thinkgo.Fatalf("You must generate codes in the `src` or its offspring directory!")
+		faygo.Fatalf("You must generate codes in the `src` or its offspring directory!")
 	}
 	return strings.Join(dirs[1:], "/src/")
 }
@@ -206,14 +206,14 @@ func (s *StructHandler) init() error {
 	s.Note = strings.TrimSpace(s.Note)
 	if len(s.importmap) == 0 {
 		s.importmap = map[string]bool{
-			"github.com/henrylee2cn/thinkgo": true,
+			"github.com/henrylee2cn/faygo": true,
 		}
 	}
 
 	var fields = make([]Field, 0, len(s.Fields))
 	s.fileParams, s.filesParams = []string{}, []string{}
 	for _, field := range s.Fields {
-		field.Name = thinkgo.CamelString(field.Name)
+		field.Name = faygo.CamelString(field.Name)
 		if field.In == "" {
 			continue
 		}
@@ -294,7 +294,7 @@ func (s *StructHandler) createStruct() string {
 
 	// build methods
 	var serve string
-	serve += fmt.Sprintf("\n// Serve impletes Handler.\nfunc (%s *%s) Serve(ctx *thinkgo.Context) error {", s.sign, s.Name)
+	serve += fmt.Sprintf("\n// Serve impletes Handler.\nfunc (%s *%s) Serve(ctx *faygo.Context) error {", s.sign, s.Name)
 	if s.ServeContent != "" {
 		serve += fmt.Sprintf("\n%s", s.ServeContent)
 	} else {
@@ -303,8 +303,8 @@ func (s *StructHandler) createStruct() string {
 			if i == 0 {
 				equal = ":" + equal
 			}
-			serve += fmt.Sprintf("\n    info, err %s ctx.SaveFile(%q, false)", equal, thinkgo.SnakeString(filename))
-			serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, thinkgo.Map{\"error\": err.Error()}, true)\n    }")
+			serve += fmt.Sprintf("\n    info, err %s ctx.SaveFile(%q, false)", equal, faygo.SnakeString(filename))
+			serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, faygo.Map{\"error\": err.Error()}, true)\n    }")
 			serve += fmt.Sprintf("\n    %s.%sUrl = info.Url", s.sign, filename)
 		}
 		for i, filename := range s.filesParams {
@@ -312,8 +312,8 @@ func (s *StructHandler) createStruct() string {
 			if i == 0 {
 				equal = ":" + equal
 			}
-			serve += fmt.Sprintf("\n    infos, err %s ctx.SaveFiles(%q, false)", equal, thinkgo.SnakeString(filename))
-			serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, thinkgo.Map{\"error\": err.Error()}, true)\n    }")
+			serve += fmt.Sprintf("\n    infos, err %s ctx.SaveFiles(%q, false)", equal, faygo.SnakeString(filename))
+			serve += fmt.Sprintf("\n    if err != nil {\n        return ctx.JSON(412, faygo.Map{\"error\": err.Error()}, true)\n    }")
 			serve += fmt.Sprintf("\n    for _, info := range infos {")
 			serve += fmt.Sprintf("\n        %s.%sUrls = append(%s.%sUrls, info.Url)", s.sign, filename, s.sign, filename)
 			serve += fmt.Sprintf("\n    }")
@@ -324,8 +324,8 @@ func (s *StructHandler) createStruct() string {
 
 	var doc string
 	if s.Note != "" || s.Return != "" {
-		doc += fmt.Sprintf("\n// Doc returns the API's note, result or parameters information.\nfunc (%s *%s) Doc() thinkgo.Doc {", s.sign, s.Name)
-		doc += fmt.Sprintf("\n    return thinkgo.Doc{")
+		doc += fmt.Sprintf("\n// Doc returns the API's note, result or parameters information.\nfunc (%s *%s) Doc() faygo.Doc {", s.sign, s.Name)
+		doc += fmt.Sprintf("\n    return faygo.Doc{")
 		doc += fmt.Sprintf("\n        Note: %q,", s.Note)
 		doc += fmt.Sprintf("\n        Return: %q,", s.Return)
 		doc += fmt.Sprintf("\n    }")

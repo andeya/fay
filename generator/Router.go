@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/henrylee2cn/thinkgo"
+	"github.com/henrylee2cn/faygo"
 )
 
 // Router returns project router codes
@@ -52,7 +52,7 @@ func (r *Router) init() error {
 	}
 	if len(r.importmap) == 0 {
 		r.importmap = map[string]bool{
-			"github.com/henrylee2cn/thinkgo": true,
+			"github.com/henrylee2cn/faygo": true,
 		}
 	}
 	return nil
@@ -170,7 +170,7 @@ func (r *Router) AddStatic(name, urlPath string, root string, nocompressAndNocac
 // Output returns router's file.
 func (r *Router) Output() error {
 	code := r.Create()
-	err := writeFile(r.dir, thinkgo.SnakeString(r.funcname)+".go", code)
+	err := writeFile(r.dir, faygo.SnakeString(r.funcname)+".go", code)
 	if err != nil {
 		return err
 	}
@@ -197,14 +197,14 @@ func (r *Router) Create() string {
 	return fmt.Sprintf("package %s\n%s\n%s", r.PkgName(), importCode(r.importmap), code)
 }
 
-// PkgPath returns the package path, e.g `github.com/henrylee2cn/think/test`
+// PkgPath returns the package path, e.g `github.com/henrylee2cn/fay/test`
 func (r *Router) PkgPath() string {
 	if r.isMainPkg || r.dir == "" {
 		return ""
 	}
 	dirs := strings.Split(r.dir, "/src/")
 	if len(dirs) < 2 {
-		thinkgo.Fatalf("You must generate codes in the `src` or its offspring directory!")
+		faygo.Fatalf("You must generate codes in the `src` or its offspring directory!")
 	}
 	return strings.Join(dirs[1:], "/src/")
 }
@@ -305,7 +305,7 @@ type (
 		PkgPrefix() string
 		RouterName() string
 		GetName() string
-		GetMethod() thinkgo.Methodset
+		GetMethod() faygo.Methodset
 		init() error
 	}
 )
@@ -313,7 +313,7 @@ type (
 // Create returns struct handler's codes
 func (n *Node) Create() string {
 	var code string
-	code += fmt.Sprintf("\n// %s register router in a tree style.\nfunc %s(frame *thinkgo.Framework) {", n.funcname, n.funcname)
+	code += fmt.Sprintf("\n// %s register router in a tree style.\nfunc %s(frame *faygo.Framework) {", n.funcname, n.funcname)
 	code += fmt.Sprintf("\nframe.Route(")
 	n.create(&code)
 	code += fmt.Sprintf("\n)")

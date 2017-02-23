@@ -1,36 +1,36 @@
-# think    [![GoDoc](https://godoc.org/github.com/tsuna/gohbase?status.png)](https://godoc.org/github.com/henrylee2cn/think)    ![Think goreportcard](https://goreportcard.com/badge/github.com/henrylee2cn/think)
+# fay    [![GoDoc](https://godoc.org/github.com/tsuna/gohbase?status.png)](https://godoc.org/github.com/henrylee2cn/fay)    ![Fay goreportcard](https://goreportcard.com/badge/github.com/henrylee2cn/fay)
 
-The deployment tools of thinkgo web frameware.
+The deployment tools of faygo web frameware.
 
-[Go to thinkgo](https://github.com/henrylee2cn/thinkgo)
+[Go to faygo](https://github.com/henrylee2cn/faygo)
 
-[简体中文](https://github.com/henrylee2cn/think/blob/master/README_ZH.md)
+[简体中文](https://github.com/henrylee2cn/fay/blob/master/README_ZH.md)
 
 ## Features
 
-- Create, compile and run (monitor changes) a new thinkgo project
+- Create, compile and run (monitor changes) a new faygo project
 - Compile and run (monitor changes) an any existing go project
-- Provides a meta-programming toolkit for thinkgo
+- Provides a meta-programming toolkit for faygo
 
 ## Download and install
 
 ```sh
-go get -u -v github.com/henrylee2cn/think
+go get -u -v github.com/henrylee2cn/fay
 ```
 
 ## Usage
 
 ```
-        think command [arguments]
+        fay command [arguments]
 
 The commands are:
-        new        create, compile and run (monitor changes) a new thinkgo project
+        new        create, compile and run (monitor changes) a new faygo project
         run        compile and run (monitor changes) an any existing go project
 
-think new appname [apptpl]
-        appname    specifies the path of the new thinkgo project
-        apptpl     optionally, specifies the thinkgo project template type
+fay new appname [apptpl]
+        appname    specifies the path of the new faygo project
+        apptpl     optionally, specifies the faygo project template type
 
-think run [appname]
+fay run [appname]
         appname    optionally, specifies the path of the new project
 ```

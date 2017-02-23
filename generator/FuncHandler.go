@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/henrylee2cn/thinkgo"
+	"github.com/henrylee2cn/faygo"
 )
 
 type (
@@ -30,7 +30,7 @@ type (
 		Note         string // note for API
 		ServeContent string // main logic
 		Return       string // response content demo
-		Method       thinkgo.Methodset
+		Method       faygo.Methodset
 		fileParams   []string
 		filesParams  []string
 		importmap    map[string]bool
@@ -45,7 +45,7 @@ func (s *FuncHandler) Output() error {
 	if err != nil {
 		return err
 	}
-	return writeFile(s.Dir, thinkgo.SnakeString(s.Name)+".go", code)
+	return writeFile(s.Dir, faygo.SnakeString(s.Name)+".go", code)
 }
 
 // Create returns struct handler's codes
@@ -66,7 +66,7 @@ func (s *FuncHandler) GetUrlPath() string {
 }
 
 // GetMethod returns request method.
-func (s *FuncHandler) GetMethod() thinkgo.Methodset {
+func (s *FuncHandler) GetMethod() faygo.Methodset {
 	return s.Method
 }
 
@@ -91,14 +91,14 @@ func (s *FuncHandler) TryMainPkg(mainPkgPath string) {
 	s.isMainPkg = true
 }
 
-// PkgPath returns the package path, e.g `github.com/henrylee2cn/think/test`
+// PkgPath returns the package path, e.g `github.com/henrylee2cn/fay/test`
 func (s *FuncHandler) PkgPath() string {
 	if s.isMainPkg || s.Dir == "" {
 		return ""
 	}
 	dirs := strings.Split(s.Dir, "/src/")
 	if len(dirs) < 2 {
-		thinkgo.Fatalf("You must generate codes in the `src` or its offspring directory!")
+		faygo.Fatalf("You must generate codes in the `src` or its offspring directory!")
 	}
 	return strings.Join(dirs[1:], "/src/")
 }
@@ -139,7 +139,7 @@ func (s *FuncHandler) init() error {
 	s.Note = strings.TrimSpace(s.Note)
 	if len(s.importmap) == 0 {
 		s.importmap = map[string]bool{
-			"github.com/henrylee2cn/thinkgo": true,
+			"github.com/henrylee2cn/faygo": true,
 		}
 	}
 	return nil
@@ -150,13 +150,13 @@ func (s *FuncHandler) createFunc() string {
 	var function string
 	var hasdoc = s.Note != "" || s.Return != ""
 	if hasdoc {
-		function += fmt.Sprintf("\n/*\n%s %s\n*/\nvar %s = thinkgo.WrapDoc(", s.Name, s.Note, s.Name)
-		function += fmt.Sprintf("\nthinkgo.HandlerFunc(func(ctx *thinkgo.Context) error {")
+		function += fmt.Sprintf("\n/*\n%s %s\n*/\nvar %s = faygo.WrapDoc(", s.Name, s.Note, s.Name)
+		function += fmt.Sprintf("\nfaygo.HandlerFunc(func(ctx *faygo.Context) error {")
 	} else {
-		function += fmt.Sprintf("\n/*\n%s %s\n*/\nvar %s = thinkgo.HandlerFunc(func(ctx *thinkgo.Context) error {", s.Name, s.Note, s.Name)
+		function += fmt.Sprintf("\n/*\n%s %s\n*/\nvar %s = faygo.HandlerFunc(func(ctx *faygo.Context) error {", s.Name, s.Note, s.Name)
 	}
 	if s.ServeContent == "" {
-		function += fmt.Sprintf("\nthinkgo.Debug(\"Calling FuncHandler - %s...\")", s.Name)
+		function += fmt.Sprintf("\nfaygo.Debug(\"Calling FuncHandler - %s...\")", s.Name)
 		function += fmt.Sprintf("\nreturn nil")
 	} else {
 		function += fmt.Sprintf("\n%s", s.ServeContent)
