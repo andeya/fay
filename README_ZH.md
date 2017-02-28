@@ -1,6 +1,8 @@
 # fay    [![GoDoc](https://godoc.org/github.com/tsuna/gohbase?status.png)](https://godoc.org/github.com/henrylee2cn/fay)    ![Fay goreportcard](https://goreportcard.com/badge/github.com/henrylee2cn/fay)
 
-Faygo WEB框架的开发工具。
+Fay 是Go Web框架 Faygo 的开发工具。
+
+Faygo 是一款快速、简洁的Go Web框架，可用极少的代码开发出高性能的Web应用程序（尤其是API接口）。只需定义 struct Handler，Faygo 就能自动绑定、验证请求参数并生成在线API文档。
 
 [Go to faygo](https://github.com/henrylee2cn/faygo)
 
