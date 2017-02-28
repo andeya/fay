@@ -10,6 +10,11 @@ Faygo WEB框架的开发工具。
 - 支持运行任意的golang程序
 - 提供Faygo的元编程工具包
 
+
+## 安装要求
+
+Go Version ≥1.8
+
 ## 下载并安装
 
 ```sh

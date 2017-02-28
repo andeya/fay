@@ -12,6 +12,10 @@ The deployment tools of faygo web frameware.
 - Compile and run (monitor changes) an any existing go project
 - Provides a meta-programming toolkit for faygo
 
+## Requirements
+
+Go Version ≥1.8
+
 ## Download and install
 
 ```sh
