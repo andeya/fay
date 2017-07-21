@@ -90,12 +90,12 @@ func newWatcher() {
 
 	faygo.Printf("[fay] Initializing watcher...")
 	var paths []string
-	readAppDirectories(crupath, &paths)
+	readAppDirectories(curpath, &paths)
 	for _, path := range paths {
 		faygo.Printf("[fay] Directory( %s )", path)
 		err = watcher.Watch(path)
 		if err != nil {
-			faygo.Errorf("[fay] Fail to watch crupathectory[ %s ]", err)
+			faygo.Errorf("[fay] Fail to watch curpathectory[ %s ]", err)
 			os.Exit(2)
 		}
 	}
@@ -128,12 +128,12 @@ func autobuild() {
 	if runtime.GOOS == "windows" {
 		appName += ".exe"
 	}
-	n := strings.LastIndex(crupath, "/src/")
+	n := strings.LastIndex(curpath, "/src/")
 	if n == -1 {
-		faygo.Fatalf("[fay] The project is not under src, can not run: %s", crupath)
+		faygo.Fatalf("[fay] The project is not under src, can not run: %s", curpath)
 	}
 	cmd := exec.Command("go", "build", "-o", appName)
-	cmd.Env = append([]string{"GOPATH=" + crupath[:n]}, os.Environ()...)
+	cmd.Env = append([]string{"GOPATH=" + curpath[:n]}, os.Environ()...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -201,8 +201,8 @@ func checkIfWatchExt(name string) bool {
 	return false
 }
 
-func readAppDirectories(crupathectory string, paths *[]string) {
-	fileInfos, err := ioutil.ReadDir(crupathectory)
+func readAppDirectories(curpathectory string, paths *[]string) {
+	fileInfos, err := ioutil.ReadDir(curpathectory)
 	if err != nil {
 		return
 	}
@@ -210,7 +210,7 @@ func readAppDirectories(crupathectory string, paths *[]string) {
 	useDirectory := false
 	for _, fileInfo := range fileInfos {
 		if fileInfo.IsDir() == true && fileInfo.Name()[0] != '.' {
-			readAppDirectories(crupathectory+fileInfo.Name(), paths)
+			readAppDirectories(curpathectory+fileInfo.Name(), paths)
 			continue
 		}
 
@@ -219,7 +219,7 @@ func readAppDirectories(crupathectory string, paths *[]string) {
 		}
 
 		if filepath.Ext(fileInfo.Name()) == ".go" {
-			*paths = append(*paths, crupathectory)
+			*paths = append(*paths, curpathectory)
 			useDirectory = true
 		}
 	}

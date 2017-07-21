@@ -44,7 +44,7 @@ import (
 )
 
 var appname string
-var crupath, _ = os.Getwd()
+var curpath, _ = os.Getwd()
 var apptpl = "simple"
 
 func main() {
@@ -72,9 +72,9 @@ func newapp(args []string) {
 		newappHelp()
 		return
 	}
-	faygo.Printf("[fay] Create a faygo project named `%s` in the `%s` path.", appname, crupath)
-	if isExist(crupath) {
-		faygo.Printf("[fay] The project path has conflic, do you want to build in: %s\n", crupath)
+	faygo.Printf("[fay] Create a faygo project named `%s` in the `%s` path.", appname, curpath)
+	if isExist(curpath) {
+		faygo.Printf("[fay] The project path has conflic, do you want to build in: %s\n", curpath)
 		faygo.Printf("[fay] Do you want to overwrite it? [yes|no]]  ")
 		if !askForConfirmation() {
 			faygo.Fatalf("[fay] Cancel...")
@@ -86,14 +86,14 @@ func newapp(args []string) {
 
 	switch apptpl {
 	case "simple":
-		model.SimplePro(crupath, appname)
+		model.SimplePro(curpath, appname)
 	default:
 		faygo.Fatalf("[fay] `%s` template does not exist, reference:\n[simple]\n", apptpl)
 	}
 
 	faygo.Printf("[fay] Create was successful")
 
-	if err := os.Chdir(crupath); err != nil {
+	if err := os.Chdir(curpath); err != nil {
 		faygo.Fatalf("[fay] Create project fail: %v", err)
 	}
 	autobuild()
@@ -109,7 +109,7 @@ func runapp(args []string) {
 		runappHelp()
 		return
 	}
-	if err := os.Chdir(crupath); err != nil {
+	if err := os.Chdir(curpath); err != nil {
 		faygo.Fatalf("[fay] Create project fail: %v", err)
 	}
 	autobuild()
@@ -149,19 +149,19 @@ func initVar(args []string) {
 	if len(args) > 0 {
 		dir, appname = filepath.Split(args[0])
 		if dir != "" {
-			crupath = filepath.Join(dir, appname)
+			curpath = filepath.Join(dir, appname)
 		} else {
-			crupath = filepath.Join(crupath, appname)
+			curpath = filepath.Join(curpath, appname)
 		}
 	} else {
-		_, appname = filepath.Split(crupath)
+		_, appname = filepath.Split(curpath)
 	}
 	var err error
-	crupath = strings.TrimSpace(crupath)
-	crupath, err = filepath.Abs(crupath)
+	curpath = strings.TrimSpace(curpath)
+	curpath, err = filepath.Abs(curpath)
 	if err != nil {
 		faygo.Fatalf("[fay] Create project fail: %s", err)
 	}
-	crupath = strings.Replace(crupath, `\`, `/`, -1)
-	crupath = strings.TrimRight(crupath, "/") + "/"
+	curpath = strings.Replace(curpath, `\`, `/`, -1)
+	curpath = strings.TrimRight(curpath, "/") + "/"
 }
