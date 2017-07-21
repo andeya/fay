@@ -15,7 +15,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -34,8 +33,8 @@ var (
 	state        sync.Mutex
 	eventTime    = make(map[string]int64)
 	scheduleTime time.Time
+	isFirstStart = true
 )
-var started = make(chan bool)
 
 func newWatcher() {
 	watcher, err := fsnotify.NewWatcher()
@@ -142,43 +141,43 @@ func autobuild() {
 		return
 	}
 	faygo.Printf("[fay] Build was successful")
-	Restart(appname)
+	Restart()
 }
 
-func Kill() {
-	defer func() {
-		if e := recover(); e != nil {
-			fmt.Println("[fay] Kill.recover -> ", e)
+func Restart() {
+	var start string
+	if isFirstStart {
+		isFirstStart = false
+		faygo.Printf("[fay] Starting app: %s", appname)
+		start = "Start"
+	} else {
+		faygo.Printf("[fay] Restarting app: %s", appname)
+		defer func() {
+			if e := recover(); e != nil {
+				faygo.Printf("[fay] Kill.recover -> %v", e)
+			}
+		}()
+		if cmd != nil && cmd.Process != nil {
+			err := cmd.Process.Kill()
+			if err != nil {
+				faygo.Printf("[fay] Kill -> %v", err)
+			}
 		}
+		start = "Restart"
+	}
+	go func() {
+		cmd = exec.Command("./" + appname)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Env = os.Environ()
+		if err := cmd.Start(); err != nil {
+			faygo.Errorf("[fay] Fail to start app[ %s ]", err)
+			return
+		}
+		faygo.Printf("[fay] %s was successful", start)
+		cmd.Wait()
+		faygo.Printf("[fay] Old process was stopped")
 	}()
-	if cmd != nil && cmd.Process != nil {
-		err := cmd.Process.Kill()
-		if err != nil {
-			fmt.Println("[fay] Kill -> ", err)
-		}
-	}
-}
-
-func Restart(appname string) {
-	faygo.Printf("[fay] Kill running process")
-	Kill()
-	go Start(appname)
-}
-
-func Start(appname string) {
-	faygo.Printf("[fay] Restarting %s...", appname)
-	if strings.Index(appname, "./") == -1 {
-		appname = "./" + appname
-	}
-
-	cmd = exec.Command(appname)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Env = os.Environ()
-
-	go cmd.Run()
-	faygo.Printf("[fay] %s is running...", appname)
-	started <- true
 }
 
 // checkTMPFile returns true if the event was for TMP files.
