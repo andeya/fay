@@ -37,7 +37,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/henrylee2cn/fay/model"
@@ -97,15 +96,9 @@ func newapp(args []string) {
 	if err := os.Chdir(crupath); err != nil {
 		faygo.Fatalf("[fay] Create project fail: %v", err)
 	}
-	exit := make(chan bool)
 	autobuild()
 	newWatcher()
-	for {
-		select {
-		case <-exit:
-			runtime.Goexit()
-		}
-	}
+	select {}
 }
 
 func runapp(args []string) {
@@ -119,15 +112,9 @@ func runapp(args []string) {
 	if err := os.Chdir(crupath); err != nil {
 		faygo.Fatalf("[fay] Create project fail: %v", err)
 	}
-	exit := make(chan bool)
 	autobuild()
 	newWatcher()
-	for {
-		select {
-		case <-exit:
-			runtime.Goexit()
-		}
-	}
+	select {}
 }
 
 const helpInfo = `Fay Usage:
