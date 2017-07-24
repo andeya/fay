@@ -18,7 +18,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -217,7 +216,7 @@ func readAppDirectories(curpathectory string, paths *[]string) {
 			continue
 		}
 
-		if filepath.Ext(fileInfo.Name()) == ".go" {
+		if checkIfWatchExt(fileInfo.Name()) {
 			*paths = append(*paths, curpathectory)
 			useDirectory = true
 		}
