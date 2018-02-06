@@ -160,7 +160,7 @@ func initVar(args []string) {
 	curpath = strings.TrimSpace(curpath)
 	curpath, err = filepath.Abs(curpath)
 	if err != nil {
-		faygo.Fatalf("[fay] Create project fail: %s", err)
+		faygo.Fatalf("[fay] Create project fail: %v", err)
 	}
 	curpath = strings.Replace(curpath, `\`, `/`, -1)
 	curpath = strings.TrimRight(curpath, "/") + "/"
