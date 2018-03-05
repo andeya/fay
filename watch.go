@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -208,7 +209,7 @@ func readAppDirectories(curpathectory string, paths *[]string) {
 	useDirectory := false
 	for _, fileInfo := range fileInfos {
 		if fileInfo.IsDir() == true && fileInfo.Name()[0] != '.' {
-			readAppDirectories(curpathectory+fileInfo.Name(), paths)
+			readAppDirectories(filepath.Join(curpathectory, fileInfo.Name()), paths)
 			continue
 		}
 
